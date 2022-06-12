@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Weather</title>
+</head>
+
+<body>
+    <div class="weather-app" id="weather-app">
+        <div class="container">
+            
+            <!-- Brand -->
+            <h1 class="brand" style="font-weight: 400; font-size: 60px;">Weather</h3>
+            
+            <div>
+                <!-- temperature,city name,time,date -->
+                <h1 class="temp" id="temp">42&#176</h1>
+                <div class="city-name">
+                    <h1 class="name" id="name">Chandigarh</h1>
+                    <small>
+                        <span class="time" id="time">5:00</span>
+                        <span class="date" id="date">Saturday June 11</span>
+                    </small>
+                </div>
+
+                <div class="weather">
+                    <!-- Icon -->
+                    <img src="./icons/day/113.png"
+                        class="icon"
+                        id="icon"
+                        alt="icon"
+                        width="50"
+                        height="50">
+
+                    <span class="condition" id="condition">Clear</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            
+            <form id="locationInput">
+                <input type="text" class="search" placeholder="Search Location..." id="search">
+                <button type="submit" class="submit" id="submit">
+                    <i class="fas fa-search-location">Find</i>
+                </button>
+            </form>
+
+            <ul class="cities" id="cities">
+                <li class="city" id="city">Chandigarh</li>
+                <li class="city" id="city">Kalka</li>
+                <li class="city" id="city">New Delhi</li>
+                <li class="city" id="city">Noida</li>
+            </ul>
+
+            <ul class="details">
+                <h4>Weather Details</h4>
+                <li>
+                    <span>Cloud</span>
+                    <span class="cloud" id="cloud">90%</span>
+                </li>
+
+                <li>
+                    <span>Humidity</span>
+                    <span class="humidity" id="humidity">4%</span>
+                </li>
+
+                <li>
+                    <span>Wind</span>
+                    <span class="wind" id="wind">8 km/h</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        var today = new Date();
+        var day = today.getDay();
+        var daylist = ["Sunday","Monday","Tuesday","Wednesday ","Thursday","Friday","Saturday"];
+        var monthlist =["Jan","Feb","March","April","May","June","July","Aug","Sep","Oct","Nov","Dec"]; 
+        var time = today.getHours() + ":" + today.getMinutes();
+        var dateTime = date+' '+time;
+         
+        document.getElementById("time").innerHTML=time;
+        document.getElementById("date").innerHTML=daylist[day]+" "+today.getDate()+" "+ monthlist[today.getMonth()];
+
+        window.cityInput="Kalka";
+        
+        document.querySelectorAll(".city").forEach(city=>{
+        city.addEventListener('click', (e) => {
+
+            window.cityInput=e.target.innerHTML;
+            fetchWeatherData();
+
+            // fade out the app
+            document.getElementById("weather-app").style.opacity="1";
+        });
+    })
+
+        document.getElementById('locationInput').addEventListener('submit',(e)=>{
+            if(document.getElementById("search").value.length==0){
+                alert("Please Type City Name!");
+            }
+
+            else{
+                cityInput=search.value;
+                fetchWeatherData();
+                document.getElementById('locationInput').value="";
+            }
+
+            e.preventDefault();
+        });
+
+
+        
+        function fetchWeatherData(){
+            fetch(`http://api.weatherapi.com/v1/current.json?key=95ae7f84c53446ceb85144559221106&q=${cityInput}`)
+            .then(response=>response.json())
+            .then(data=>{
+                console.log(data);
+                // console.log(data.location.name);
+
+                document.getElementById("name").innerHTML=data.location.name;
+                document.getElementById("cloud").innerHTML=data.current.cloud + "%";
+                document.getElementById("humidity").innerHTML=data.current.humidity+ "%";
+                document.getElementById("wind").innerHTML=data.current.wind_kph+ "Km/h";
+                document.getElementById("temp").innerHTML=data.current.temp_c+"&#176;";
+                document.getElementById("condition").innerHTML=data.current.condition.text;
+
+                const iconId=data.current.condition.icon.substr("//cdn.weatherapi.com/weather/64x64/".length);
+                document.getElementById("icon").src="./icons/"+iconId;
+
+                
+                let timeofDay="day";
+
+                if(!data.current.is_day){
+                    timeofDay="night";
+                }
+
+                var code=data.current.condition.code;
+
+                if(code==1000){
+                    document.getElementById("weather-app").style.backgroundImage="url(images/"+timeofDay+"/clear.jpg)";
+                    document.getElementById("submit").style.background="#e5ba92";
+
+                    if(timeofDay=="night"){
+                        document.getElementById("submit").style.background="#181e27";
+                    }
+                }
+
+                else if(
+                    code==1003 || code==1006 ||code==1009 ||
+                    code==1030 || code==1069 ||code==1087 ||
+                    code==1135 ||code==1273 ||code==1276 ||code==1279 ||
+                    code==1282 ){
+                        document.getElementById("weather-app").style.backgroundImage='url(./images/$(timeofDay)/cloudy.jpg)';
+                        document.getElementById("submit").style.background="#fa6d1b";
+
+                        if(timeofDay=="night"){
+                            document.getElementById("submit").style.background="#181e27";
+                        }
+
+                }
+
+                else if(code==1063 || code==1069 ||code==1072 || code==1150 || code==1153 ||code==1180 ||
+                    code==1183 ||code==1186 ||code==1189 ||code==1192 ||
+                    code==1195 || code==1204 || code==1207 ||code==1240 ||
+                    code==1243 || code==1246 ||code==1249 ||
+                    code==1252){
+                        document.getElementById("weather-app").style.backgroundImage=`url(./images/$(timeofDay)/rainy.jpg)`;
+                        document.getElementById("submit").style.background="#647d75";
+
+                        if(timeofDay=="night"){
+                            document.getElementById("submit").style.background="#325c80";
+                        }
+                        
+                }
+
+                else{
+                    document.getElementById("weather-app").style.backgroundImage=`url(./images/$(timeofDay)/snowy.jpg)`;
+                    document.getElementById("submit").style.background="#325c80";
+
+                    if(timeofDay=="night"){
+                        document.getElementById("submit").style.background="#1b1b1b";
+                    }
+                }
+            })
+            .catch(()=>{
+                alert("City is not found, please try again!");
+                document.getElementById("weather-app").style.opacity="1";
+            })
+        }
+
+
+        fetchWeatherData();
+    </script>
+</body>
+</html>
