@@ -20,7 +20,7 @@
                 <!-- temperature,city name,time,date -->
                 <h1 class="temp" id="temp">42&#176</h1>
                 <div class="city-name">
-                    <h1 class="name" id="name">Chandigarh</h1>
+                    <h1 class="name" id="name">Chandigarh</h1><span id="cun">In</span>
                     <small>
                         <span class="time" id="time">5:00</span>
                         <span class="date" id="date">Saturday June 11</span>
@@ -29,7 +29,7 @@
 
                 <div class="weather">
                     <!-- Icon -->
-                    <img src="./icons/day/113.png"
+                    <img src="http://openweathermap.org/img/wn/01d@2x.png"
                         class="icon"
                         id="icon"
                         alt="icon"
@@ -44,7 +44,8 @@
         <div class="panel">
             
             <form id="locationInput">
-                <input type="text" class="search" placeholder="Search Location..." id="search">
+                <input type="text" class="search" placeholder="City" id="search">
+                <input type="text" class="country" placeholder="Country" id="country">
                 <button type="submit" class="submit" id="submit">
                     <i class="fas fa-search-location">Find</i>
                 </button>
@@ -53,14 +54,16 @@
             <ul class="cities" id="cities">
                 <li class="city" id="city">Chandigarh</li>
                 <li class="city" id="city">Kalka</li>
-                <li class="city" id="city">New Delhi</li>
-                <li class="city" id="city">Noida</li>
+                <li class="city" id="city">Baddi</li>
+                <li class="city" id="city">Florida</li>
+                <li class="city" id="city">Toronto</li>
+
             </ul>
 
             <ul class="details">
                 <h4>Weather Details</h4>
                 <li>
-                    <span>Cloud</span>
+                    <span>Clouds</span>
                     <span class="cloud" id="cloud">90%</span>
                 </li>
 
@@ -70,8 +73,13 @@
                 </li>
 
                 <li>
-                    <span>Wind</span>
+                    <span>Wind Speed</span>
                     <span class="wind" id="wind">8 km/h</span>
+                </li>
+
+                <li>
+                    <span>Visibility</span>
+                    <span class="visibility" id="wind">5 km</span>
                 </li>
             </ul>
         </div>
@@ -90,25 +98,27 @@
         document.getElementById("date").innerHTML=daylist[day]+" "+today.getDate()+" "+ monthlist[today.getMonth()];
 
         window.cityInput="Kalka";
+        window.countryInput="India";
         
         document.querySelectorAll(".city").forEach(city=>{
-        city.addEventListener('click', (e) => {
+            city.addEventListener('click', (e) => {
 
-            window.cityInput=e.target.innerHTML;
-            fetchWeatherData();
+                window.cityInput=e.target.innerHTML;
+                fetchWeatherData();
 
-            // fade out the app
-            document.getElementById("weather-app").style.opacity="1";
-        });
-    })
+                // fade out the app
+                document.getElementById("weather-app").style.opacity="1";
+            });
+        })
 
         document.getElementById('locationInput').addEventListener('submit',(e)=>{
-            if(document.getElementById("search").value.length==0){
-                alert("Please Type City Name!");
+            if(document.getElementById("search").value.length==0 || document.getElementById("country").value.length==0){
+                alert("Please Type Name of City & Country !");
             }
 
             else{
                 cityInput=search.value;
+                countryInput=country.value;
                 fetchWeatherData();
                 document.getElementById('locationInput').value="";
             }
@@ -119,33 +129,34 @@
 
         
         function fetchWeatherData(){
-            fetch(`http://api.weatherapi.com/v1/current.json?key=95ae7f84c53446ceb85144559221106&q=${cityInput}`)
+            fetch(`https://api.openweathermap.org/data/2.5/weather?&q=${cityInput},${countryInput}&appid=41cf7072ecf37d097a3d256bc3c81a17&units=metric`)
             .then(response=>response.json())
             .then(data=>{
                 console.log(data);
                 // console.log(data.location.name);
 
-                document.getElementById("name").innerHTML=data.location.name;
-                document.getElementById("cloud").innerHTML=data.current.cloud + "%";
-                document.getElementById("humidity").innerHTML=data.current.humidity+ "%";
-                document.getElementById("wind").innerHTML=data.current.wind_kph+ "Km/h";
-                document.getElementById("temp").innerHTML=data.current.temp_c+"&#176;";
-                document.getElementById("condition").innerHTML=data.current.condition.text;
+                document.getElementById("name").innerHTML=data.name;
+                document.getElementById("cloud").innerHTML=data.clouds.all + "%";
+                document.getElementById("humidity").innerHTML=data.main.humidity + "%";
+                document.getElementById("wind").innerHTML=parseInt(data.wind.speed*18/5) + "Km/h";
+                document.getElementById("temp").innerHTML=parseInt(data.main.temp)+"&#176;";
+                document.getElementById("condition").innerHTML=data.weather[0].description;
+                // document.getElementById("cun").innerHTML=data.sys.country;
+                document.getElementById("icon").src="http://openweathermap.org/img/wn/"+data.weather[0].icon+"@2x.png";
 
-                const iconId=data.current.condition.icon.substr("//cdn.weatherapi.com/weather/64x64/".length);
-                document.getElementById("icon").src="./icons/"+iconId;
-
-                
                 let timeofDay="day";
 
-                if(!data.current.is_day){
+                var temp=(data.weather[0].icon);
+                console.log(temp[2]);
+
+                if(temp[2]=="n"){
                     timeofDay="night";
                 }
 
-                var code=data.current.condition.code;
+                var code=data.weather[0].id;
 
-                if(code==1000){
-                    document.getElementById("weather-app").style.backgroundImage="url(images/"+timeofDay+"/clear.jpg)";
+                if(code==800){
+                    document.getElementById("weather-app").style.backgroundImage=`url(images/${timeofDay}/clear.jpg)`;
                     document.getElementById("submit").style.background="#e5ba92";
 
                     if(timeofDay=="night"){
@@ -154,11 +165,9 @@
                 }
 
                 else if(
-                    code==1003 || code==1006 ||code==1009 ||
-                    code==1030 || code==1069 ||code==1087 ||
-                    code==1135 ||code==1273 ||code==1276 ||code==1279 ||
-                    code==1282 ){
-                        document.getElementById("weather-app").style.backgroundImage='url(./images/$(timeofDay)/cloudy.jpg)';
+                    code==801 || code==802 ||code==803 ||
+                    code==804 ){
+                        document.getElementById("weather-app").style.backgroundImage=`url(images/${timeofDay}/cloudy.jpg)`;
                         document.getElementById("submit").style.background="#fa6d1b";
 
                         if(timeofDay=="night"){
@@ -167,12 +176,9 @@
 
                 }
 
-                else if(code==1063 || code==1069 ||code==1072 || code==1150 || code==1153 ||code==1180 ||
-                    code==1183 ||code==1186 ||code==1189 ||code==1192 ||
-                    code==1195 || code==1204 || code==1207 ||code==1240 ||
-                    code==1243 || code==1246 ||code==1249 ||
-                    code==1252){
-                        document.getElementById("weather-app").style.backgroundImage=`url(./images/$(timeofDay)/rainy.jpg)`;
+                else if(code==501 || code==502 ||code==502 || code==503 || code==504 ||code==511 ||
+                    code==520 ||code==521 ||code==522 ||code==531){
+                        document.getElementById("weather-app").style.backgroundImage=`url(./images/${timeofDay}/rain.jpg)`;
                         document.getElementById("submit").style.background="#647d75";
 
                         if(timeofDay=="night"){
@@ -181,8 +187,9 @@
                         
                 }
 
-                else{
-                    document.getElementById("weather-app").style.backgroundImage=`url(./images/$(timeofDay)/snowy.jpg)`;
+                else if(code==601 || code==602 ||code==602 || code==600 || code==613 ||code==611 ||
+                    code==612 ||code==615 ||code==616 ||code==620 ||code==621 || code==622){
+                    document.getElementById("weather-app").style.backgroundImage=`url(./images/${timeofDay}/snow.jpg)`;
                     document.getElementById("submit").style.background="#325c80";
 
                     if(timeofDay=="night"){
@@ -197,7 +204,8 @@
         }
 
 
-        fetchWeatherData();
+        // fetchWeatherData();
+        console.log(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"}));
     </script>
 </body>
 </html>
